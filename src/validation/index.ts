@@ -15,7 +15,11 @@ export type { ErrorCode } from "./errors.js";
 export { errorData } from "./errors.js";
 
 // step 1 — request/
-export { requireNonEmptyString, requireString } from "./request/fields.js";
+export {
+  requireNonEmptyString,
+  requireString,
+  requireOptionalStatusFilter,
+} from "./request/fields.js";
 export { validatePagination } from "./request/pagination.js";
 export type { FileType } from "./request/fileType.js";
 export { fileTypeFromPath, validateSupportedFileType } from "./request/fileType.js";

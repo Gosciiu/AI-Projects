@@ -33,7 +33,7 @@ gdy potrzebujesz zrozumieć "dlaczego", nie "co").
 - [x] `src/domain/` — Project, ProjectFile, FileVersion (czyste typy)
 - [x] `src/dto/` — 13 DTO wg sekcji 7
 - [x] `src/storage/` — I/O JSON wg sekcji 10
-- [ ] `src/validation/` — request/state/version/business wg sekcji 5
+- [x] `src/validation/` — request/state/version/business wg sekcji 5
 - [ ] `src/operations/` — 17 operacji wg sekcji 8
 - [ ] `tests/`
 - [ ] MCP adapter + `src/server.ts`

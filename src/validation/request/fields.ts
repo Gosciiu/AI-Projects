@@ -37,3 +37,19 @@ export function requireString(value: unknown, field: string): ErrorData | null {
   if (typeof value === "string") return null;
   return errorData("VALIDATION_ERROR", `Field "${field}" must be a string`);
 }
+
+/**
+ * Optional `status` filter of project.files (Section 8): absent →
+ * ALL files; otherwise must be exactly "active" or "archived".
+ * This validates the request FORMAT (step 1) — nothing to do with
+ * the step-3 state checks in state/fileStatus.ts.
+ */
+export function requireOptionalStatusFilter(value: unknown): ErrorData | null {
+  if (value === undefined || value === "active" || value === "archived") {
+    return null;
+  }
+  return errorData(
+    "VALIDATION_ERROR",
+    `Field "status" must be "active" or "archived" when provided`,
+  );
+}

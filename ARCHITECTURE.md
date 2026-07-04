@@ -159,7 +159,13 @@ nie jest błąd — to świadomie różna semantyka tego samego nazwiska pola.
 
 ---
 
-## 8. MCP Specification — 17 operacji
+## 8. MCP Specification — 18 operacji
+
+> `project.setDefaultFile` dodane 2026-07-03 (decyzja user + Claude +
+> ChatGPT) po odkryciu podczas pisania testów, że żadna operacja nie
+> potrafiła USTAWIĆ defaultFileId — ta sama klasa luki co wcześniej
+> file.unarchive. Domyka cykl życia default file (set/read/change/
+> clear) i daje Project.versionId pierwszą realną rolę jako ETag.
 
 Domyślne sortowanie: `path ASC` wszędzie, **poza** `project.history`
 i `file.versions`, które sortują `DESC` (chronologia).
@@ -184,7 +190,7 @@ Szczegóły efektów:
 - `file.unarchive` → BRAK FileVersion. NIE przywraca automatycznie `defaultFileId`.
 - `file.delete` → wymaga `status == archived` (dwuetapowy bezpiecznik). HARD DELETE: usuwa ProjectFile + WSZYSTKIE FileVersion fizycznie. Defensywnie czyści `defaultFileId` jeśli wskazuje usuwany plik. `project.history` traci wpisy tego pliku (celowe, nie błąd).
 
-### Project Operations (6)
+### Project Operations (7)
 
 | Operacja | Request | Response | Errors |
 |---|---|---|---|
@@ -194,12 +200,16 @@ Szczegóły efektów:
 | `project.files` | projectId, status?, page, pageSize | PageDTO\<FileMetaDTO\> | VALIDATION_ERROR, PROJECT_NOT_FOUND |
 | `project.search.fulltext` | projectId, query, page, pageSize | PageDTO\<SearchResultDTO\> | VALIDATION_ERROR, PROJECT_NOT_FOUND |
 | `project.history` | projectId, page, pageSize | PageDTO\<HistoryEntryDTO\> | VALIDATION_ERROR, PROJECT_NOT_FOUND |
+| `project.setDefaultFile` | projectId, fileId (string \| null), projectVersionId | ProjectMetaDTO / ConflictData | VALIDATION_ERROR, PROJECT_NOT_FOUND, FILE_NOT_FOUND, FILE_ARCHIVED, FILE_NOT_IN_PROJECT* |
 
 Szczegóły:
 - `project.open`: jeśli `defaultFileId != null` → zwraca `defaultFile`, `files = null`. Inaczej → `defaultFile = null`, `files` = tylko **active**, `path ASC`.
 - `project.files`: brak `status` → **WSZYSTKIE** pliki (active+archived). Inaczej filtr po `status`.
 - `project.search.fulltext`: tylko aktualna treść **active** plików. `query` musi być non-empty. Brak rankingu/scoringu — `path ASC`.
 - `project.history`: agregacja FileVersion. Zawiera tylko `create`/`update`/`version.restore`. NIE zawiera `move`/`archive`/`unarchive`. `createdAt DESC`. Brak pola `operationType`.
+- `project.setDefaultFile` *(18. operacja, dodana 2026-07-03)*: ustawia lub odpina (`fileId: null`) default file projektu. GVO: 1) request (fileId to string LUB null — jawnie przekazany null jest legalny), 2) PROJECT_NOT_FOUND; jeśli fileId != null: FILE_NOT_FOUND, 3) jeśli fileId != null: FILE_ARCHIVED (niezmiennik sekcji 2 — default może wskazywać tylko active), 4) `projectVersionId` vs `Project.versionId` → ConflictData — **pierwsza operacja używająca Project.versionId jako ETagu optimistic locking**, 5) jeśli fileId != null: plik musi należeć do projektu (patrz * niżej). Efekt: `defaultFileId` = fileId, nowy `Project.versionId`. Zwraca ProjectMetaDTO.
+
+*\* Kod błędu dla "plik nie należy do projektu" — do rozstrzygnięcia przy implementacji: NIE dodajemy nowego kodu bez potrzeby. Rekomendacja: użyć FILE_NOT_FOUND (z perspektywy TEGO projektu plik nie istnieje — spójne z tym, że file operations identyfikują plik globalnie, ale tu kontekst jest projektowy). Claude Code ma zgłosić, jeśli widzi to inaczej.*
 
 **`project.delete` NIE ISTNIEJE w MCP** — patrz sekcja 9.
 
@@ -312,7 +322,7 @@ CLI/GUI/REST mogą reużywać tej samej logiki.
 8. `server.ts`
 
 Review po każdym bloku przed przejściem dalej. Pełny zakres (wszystkie
-17 operacji), nie minimalny szkielet.
+18 operacji), nie minimalny szkielet.
 
 ---
 
@@ -341,7 +351,8 @@ Review po każdym bloku przed przejściem dalej. Pełny zakres (wszystkie
 - Brak bazy danych — wyłącznie pliki JSON wg Filesystem Layout (sekcja 10).
 - `project.delete` NIE jest toolem MCP — wyłącznie funkcja Application Layer dla użytkownika (sekcja 9).
 - AI musi wiedzieć o istnieniu `project.delete` (Application Layer) i może je proaktywnie sugerować użytkownikowi — ale nigdy go nie wykonuje.
-- `project.create` i `project.list` SĄ pełnoprawnymi MCP toolami.
+- `project.create`, `project.list` i `project.setDefaultFile` SĄ pełnoprawnymi MCP toolami (łącznie 18 operacji).
+- `project.setDefaultFile` to jedyna operacja walidująca `Project.versionId` jako ETag (optimistic locking na poziomie projektu).
 
 ---
 

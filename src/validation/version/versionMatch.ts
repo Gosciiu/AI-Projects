@@ -1,4 +1,4 @@
-import type { ProjectFile } from "../../domain/index.js";
+import type { Project, ProjectFile } from "../../domain/index.js";
 import type { ConflictData } from "../../dto/index.js";
 
 /**
@@ -30,5 +30,31 @@ export function checkVersionConflict(
     fileId: file.id,
     versionId: file.versionId,
     content: currentContent,
+  };
+}
+
+/**
+ * Step 4 for the PROJECT object — used only by project.setDefaultFile,
+ * the single operation optimistically locking on Project.versionId
+ * (Section 8, operation 18; Section 12).
+ *
+ * ConflictData's shape is frozen and file-flavored (Section 7), so
+ * the mapping preserves each field's ROLE from the file case rather
+ * than its name:
+ *   fileId    = id of the conflicted object    → project.id
+ *   versionId = its CURRENT ETag (for retry)   → project.versionId
+ *   content   = its current contested state    → current defaultFileId,
+ *               "" when null (file ids are UUIDs, never empty, so ""
+ *               is unambiguous)
+ */
+export function checkProjectVersionConflict(
+  project: Project,
+  requestedVersionId: string,
+): ConflictData | null {
+  if (project.versionId === requestedVersionId) return null;
+  return {
+    fileId: project.id,
+    versionId: project.versionId,
+    content: project.defaultFileId ?? "",
   };
 }

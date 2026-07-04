@@ -39,6 +39,24 @@ export function requireString(value: unknown, field: string): ErrorData | null {
 }
 
 /**
+ * project.setDefaultFile's `fileId` (Section 8, operation 18): a
+ * non-empty string OR an EXPLICIT null (= unset the default).
+ * `undefined` (field absent) is a VALIDATION_ERROR — accidentally
+ * omitting the field must not silently unset the default.
+ */
+export function requireNonEmptyStringOrNull(
+  value: unknown,
+  field: string,
+): ErrorData | null {
+  if (value === null) return null;
+  if (typeof value === "string" && value.trim() !== "") return null;
+  return errorData(
+    "VALIDATION_ERROR",
+    `Field "${field}" must be a non-empty string or an explicit null`,
+  );
+}
+
+/**
  * Optional `status` filter of project.files (Section 8): absent →
  * ALL files; otherwise must be exactly "active" or "archived".
  * This validates the request FORMAT (step 1) — nothing to do with

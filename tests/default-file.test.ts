@@ -9,6 +9,7 @@ import {
 import { readProject } from "../src/storage/index.js";
 import {
   cleanupRoot,
+  corruptDefaultFileId,
   expectSuccess,
   makeRoot,
   seedFile,
@@ -84,8 +85,9 @@ describe("defaultFileId and Project.versionId", () => {
       await fileArchive(root, { fileId: file.id, versionId: file.versionId }),
     );
     // Simulate corruption: default pointing at an ARCHIVED file
-    // (normal flow can't produce this — archive clears it).
-    await setDefaultFile(root, project.id, file.id);
+    // (normal flow can't produce this — archive clears it, and
+    // project.setDefaultFile refuses archived files).
+    await corruptDefaultFileId(root, project.id, file.id);
     const before = (await readProject(root, project.id))!;
 
     expectSuccess(

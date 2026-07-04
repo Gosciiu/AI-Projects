@@ -45,6 +45,12 @@ export interface ErrorData {
  * `OperationResponse.status`, so repeating it here would be
  * redundant. `versionId`/`content` reflect the CURRENT server-side
  * state of the file, letting the client rebase its change.
+ *
+ * project.setDefaultFile (the only Project-level optimistic lock)
+ * reuses this frozen shape with the field ROLES preserved:
+ * fileId = project.id, versionId = current Project.versionId,
+ * content = current defaultFileId ("" when null). See
+ * validation/version/versionMatch.ts.
  */
 export interface ConflictData {
   fileId: string;

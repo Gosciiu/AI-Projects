@@ -17,6 +17,7 @@ export { errorData } from "./errors.js";
 // step 1 — request/
 export {
   requireNonEmptyString,
+  requireNonEmptyStringOrNull,
   requireString,
   requireOptionalStatusFilter,
 } from "./request/fields.js";
@@ -35,9 +36,13 @@ export {
 export { requireActiveFile, requireArchivedFile } from "./state/fileStatus.js";
 
 // step 4 — version/
-export { checkVersionConflict } from "./version/versionMatch.js";
+export {
+  checkVersionConflict,
+  checkProjectVersionConflict,
+} from "./version/versionMatch.js";
 
 // step 5 — business/
 export { checkPathConflict } from "./business/pathConflict.js";
 export { requireContentChange } from "./business/noChanges.js";
 export { requireSameFile } from "./business/versionMismatch.js";
+export { requireFileInProject } from "./business/fileInProject.js";

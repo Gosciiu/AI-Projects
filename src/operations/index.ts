@@ -1,5 +1,5 @@
 /**
- * Operations layer — all 17 MCP operations as pure async functions
+ * Operations layer — all 18 MCP operations as pure async functions
  * `(root, request) → OperationResponse<T>` (ARCHITECTURE.md
  * Sections 8 & 11). MCP-agnostic: the MCP adapter (later block)
  * passes raw `unknown` request fields in; GVO step 1 happens here,
@@ -20,13 +20,14 @@ export { fileArchive } from "./file/fileArchive.js";
 export { fileUnarchive } from "./file/fileUnarchive.js";
 export { fileDelete } from "./file/fileDelete.js";
 
-// Project Operations (6)
+// Project Operations (7)
 export { projectCreate } from "./project/projectCreate.js";
 export { projectList } from "./project/projectList.js";
 export { projectOpen } from "./project/projectOpen.js";
 export { projectFiles } from "./project/projectFiles.js";
 export { projectSearchFulltext } from "./project/projectSearchFulltext.js";
 export { projectHistory } from "./project/projectHistory.js";
+export { projectSetDefaultFile } from "./project/projectSetDefaultFile.js";
 
 // File Version Operations (4)
 export { fileVersions } from "./version/fileVersions.js";

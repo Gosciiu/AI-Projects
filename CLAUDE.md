@@ -34,8 +34,8 @@ gdy potrzebujesz zrozumieć "dlaczego", nie "co").
 - [x] `src/dto/` — 13 DTO wg sekcji 7
 - [x] `src/storage/` — I/O JSON wg sekcji 10
 - [x] `src/validation/` — request/state/version/business wg sekcji 5
-- [x] `src/operations/` — 17 operacji wg sekcji 8 (+ `src/mappers/`)
-- [ ] `tests/`
+- [x] `src/operations/` — 18 operacji wg sekcji 8 (+ `src/mappers/`)
+- [x] `tests/`
 - [ ] MCP adapter + `src/server.ts`
 
 Kolejność implementacji jest wiążąca (sekcja 11). Po każdym bloku

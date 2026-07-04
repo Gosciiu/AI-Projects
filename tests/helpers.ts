@@ -10,7 +10,11 @@ import type {
   OperationResponse,
   ProjectMetaDTO,
 } from "../src/dto/index.js";
-import { fileCreate, projectCreate } from "../src/operations/index.js";
+import {
+  fileCreate,
+  projectCreate,
+  projectSetDefaultFile,
+} from "../src/operations/index.js";
 import { readProject, writeProject } from "../src/storage/index.js";
 
 /**
@@ -75,11 +79,34 @@ export async function seedFile(
 }
 
 /**
- * None of the 17 MCP operations SETS defaultFileId (project.create
- * starts at null; file.archive/file.delete only clear it), so tests
- * arrange it directly through the real storage layer.
+ * Seeds the default file through the PUBLIC project.setDefaultFile
+ * operation (the gap the 18th operation closed — previously this
+ * had to write storage directly). The storage read exists only to
+ * fetch the current Project ETag for the optimistic lock.
  */
 export async function setDefaultFile(
+  root: string,
+  projectId: string,
+  fileId: string,
+): Promise<void> {
+  const project = await readProject(root, projectId);
+  if (project === null) throw new Error(`seed: project ${projectId} missing`);
+  expectSuccess(
+    await projectSetDefaultFile(root, {
+      projectId,
+      fileId,
+      projectVersionId: project.versionId,
+    }),
+  );
+}
+
+/**
+ * Writes an ILLEGAL defaultFileId directly through storage, bypassing
+ * validation — simulates corruption (e.g. a default pointing at an
+ * archived file, which project.setDefaultFile rightly refuses) to
+ * exercise defensive branches. Never use it to arrange legal states.
+ */
+export async function corruptDefaultFileId(
   root: string,
   projectId: string,
   fileId: string,

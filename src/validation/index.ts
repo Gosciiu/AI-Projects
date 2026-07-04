@@ -1,5 +1,5 @@
 /**
- * Validation layer — pure functions, no I/O, reused by all 17
+ * Validation layer — pure functions, no I/O, reused by all 18
  * operations. Subfolders map 1:1 to Global Validation Order steps
  * (ARCHITECTURE.md Sections 5 & 11):
  *

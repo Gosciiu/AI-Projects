@@ -1,0 +1,94 @@
+import { randomUUID } from "node:crypto";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import { expect } from "vitest";
+import type {
+  ConflictData,
+  ErrorData,
+  FileDTO,
+  OperationResponse,
+  ProjectMetaDTO,
+} from "../src/dto/index.js";
+import { fileCreate, projectCreate } from "../src/operations/index.js";
+import { readProject, writeProject } from "../src/storage/index.js";
+
+/**
+ * End-to-end test helpers: every test gets a real, isolated data
+ * root on disk (mkdtemp) and exercises the full
+ * Operations → Storage stack — no mocks. Seeding goes through the
+ * operations themselves wherever an operation exists for it.
+ */
+
+export async function makeRoot(): Promise<string> {
+  return mkdtemp(path.join(tmpdir(), "ai-workspace-test-"));
+}
+
+export async function cleanupRoot(root: string): Promise<void> {
+  await rm(root, { recursive: true, force: true });
+}
+
+export function expectSuccess<T>(res: OperationResponse<T>): T {
+  if (res.status !== "success") {
+    throw new Error(
+      `Expected success, got ${res.status}: ${JSON.stringify(res.data)}`,
+    );
+  }
+  return res.data;
+}
+
+export function expectError<T>(res: OperationResponse<T>, code: string): ErrorData {
+  if (res.status !== "error") {
+    throw new Error(
+      `Expected error ${code}, got ${res.status}: ${JSON.stringify(res.data)}`,
+    );
+  }
+  expect(res.data.code).toBe(code);
+  return res.data;
+}
+
+export function expectConflict<T>(res: OperationResponse<T>): ConflictData {
+  if (res.status !== "conflict") {
+    throw new Error(
+      `Expected conflict, got ${res.status}: ${JSON.stringify(res.data)}`,
+    );
+  }
+  return res.data;
+}
+
+export async function seedProject(
+  root: string,
+  name = "Test Project",
+): Promise<ProjectMetaDTO> {
+  return expectSuccess(await projectCreate(root, { name }));
+}
+
+export async function seedFile(
+  root: string,
+  projectId: string,
+  filePath: string,
+  content = "",
+): Promise<FileDTO> {
+  return expectSuccess(
+    await fileCreate(root, { projectId, path: filePath, content }),
+  );
+}
+
+/**
+ * None of the 17 MCP operations SETS defaultFileId (project.create
+ * starts at null; file.archive/file.delete only clear it), so tests
+ * arrange it directly through the real storage layer.
+ */
+export async function setDefaultFile(
+  root: string,
+  projectId: string,
+  fileId: string,
+): Promise<void> {
+  const project = await readProject(root, projectId);
+  if (project === null) throw new Error(`seed: project ${projectId} missing`);
+  await writeProject(root, {
+    ...project,
+    defaultFileId: fileId,
+    versionId: randomUUID(),
+  });
+}

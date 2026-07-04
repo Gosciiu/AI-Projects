@@ -34,7 +34,7 @@ gdy potrzebujesz zrozumieć "dlaczego", nie "co").
 - [x] `src/dto/` — 13 DTO wg sekcji 7
 - [x] `src/storage/` — I/O JSON wg sekcji 10
 - [x] `src/validation/` — request/state/version/business wg sekcji 5
-- [ ] `src/operations/` — 17 operacji wg sekcji 8
+- [x] `src/operations/` — 17 operacji wg sekcji 8 (+ `src/mappers/`)
 - [ ] `tests/`
 - [ ] MCP adapter + `src/server.ts`
 
